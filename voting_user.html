@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Credit Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Credit Manager</h1>
+    <div>
+        <h2>Admin Uploaded Credits</h2>
+        <p id="creditsInfo">Please connect your MetaMask wallet to view your credits</p>
+        <button id="connectWalletButton">Connect Wallet</button>
+    </div>
+
+    <script>
+        // Contract details
+        const contractAddress = '0x93b2c685acd611f0886e6655834a55fd10db70e4';
+        const abi =[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "studentWallet",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "credits",
+				"type": "uint256"
+			}
+		],
+		"name": "CreditsMinted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "studentWallet",
+				"type": "address"
+			}
+		],
+		"name": "getCredits",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "credits",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "studentWallet",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "credits",
+				"type": "uint256"
+			}
+		],
+		"name": "mintCredits",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "students",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "credits",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+        let web3;
+        let contract;
+        let currentAccount = null;
+
+        // Initialize the app when the page loads
+        window.addEventListener('load', async () => {
+            // Check if MetaMask is installed
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                contract = new web3.eth.Contract(abi, contractAddress);
+                
+                // Check if already connected
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        currentAccount = accounts[0];
+                        loadCredits(currentAccount);
+                    }
+                } catch (error) {
+                    console.error("Error checking accounts:", error);
+                }
+                
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    if (accounts.length > 0) {
+                        currentAccount = accounts[0];
+                        loadCredits(currentAccount);
+                    } else {
+                        currentAccount = null;
+                        document.getElementById('creditsInfo').innerText = 'Please connect your MetaMask wallet to view your credits';
+                    }
+                });
+            } else {
+                document.getElementById('creditsInfo').innerText = 'MetaMask is not installed. Please install MetaMask to use this application.';
+                document.getElementById('connectWalletButton').disabled = true;
+            }
+        });
+
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    currentAccount = accounts[0];
+                    document.getElementById('connectWalletButton').innerText = 'Wallet Connected';
+                    loadCredits(currentAccount);
+                } catch (error) {
+                    console.error("Connection error:", error);
+                    document.getElementById('creditsInfo').innerText = 'Error connecting wallet: ' + error.message;
+                }
+            } else {
+                document.getElementById('creditsInfo').innerText = 'MetaMask is not installed. Please install MetaMask to use this application.';
+            }
+        }
+
+        async function loadCredits(studentWallet) {
+            if (!contract) {
+                web3 = new Web3(window.ethereum);
+                contract = new web3.eth.Contract(abi, contractAddress);
+            }
+            
+            document.getElementById('creditsInfo').innerText = 'Loading credits...';
+            
+            try {
+                const result = await contract.methods.getCredits(studentWallet).call();
+                document.getElementById('creditsInfo').innerText = `Name: ${result.name}, Credits: ${result.credits}`;
+            } catch (error) {
+                console.error("Error fetching credits:", error);
+                document.getElementById('creditsInfo').innerText = 'Error fetching credits: ' + error.message;
+            }
+        }
+
+        document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+    </script>
+</body>
+</html>

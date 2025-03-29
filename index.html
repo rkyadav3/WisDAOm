@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Upload Student Credits</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #walletAddress {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .csv-preview {
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .column-mapping {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .column-mapping select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .column-mapping label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Admin Panel: Upload Student CSV & Mint Credits</h2>
+
+    <button id="connectWalletBtn">🔗 Connect MetaMask Wallet</button>
+    <p id="walletAddress">Not Connected</p>
+
+    <input type="file" id="csvFile" accept=".csv">
+    
+    <div id="columnMapping" class="column-mapping" style="display: none;">
+      <h3>Map CSV Columns</h3>
+      <div>
+        <label for="nameColumn">Student Name Column:</label>
+        <select id="nameColumn"></select>
+      </div>
+      <div>
+        <label for="walletColumn">Wallet Address Column:</label>
+        <select id="walletColumn"></select>
+      </div>
+      <div>
+        <label for="creditsColumn">Credits Column:</label>
+        <select id="creditsColumn"></select>
+      </div>
+    </div>
+
+    <div id="csvPreview" class="csv-preview"></div>
+    
+    <button id="mintCreditsBtn" style="display: none;">Mint Credits</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <script>
+    let provider, signer, contract;
+    let rawData = [];
+    let columns = [];
+    let mappedData = [];
+    
+    // Column mapping selections
+    let selectedNameColumn = '';
+    let selectedWalletColumn = '';
+    let selectedCreditsColumn = '';
+
+    // The CONTRACT_ADDRESS should be a string with quotes
+    const CONTRACT_ADDRESS = "0x93b2c685acd611f0886e6655834a55fd10db70e4";
+    const CONTRACT_ABI = [
+      {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "studentWallet",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "credits",
+            "type": "uint256"
+          }
+        ],
+        "name": "CreditsMinted",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "studentWallet",
+            "type": "address"
+          }
+        ],
+        "name": "getCredits",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "credits",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "studentWallet",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "credits",
+            "type": "uint256"
+          }
+        ],
+        "name": "mintCredits",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "name": "students",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "credits",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+
+    document.getElementById("connectWalletBtn").addEventListener("click", async () => {
+      if (window.ethereum) {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+        const address = await signer.getAddress();
+        document.getElementById("walletAddress").innerText = "Connected: " + address;
+      } else {
+        alert("MetaMask is not installed!");
+      }
+    });
+
+    document.getElementById("csvFile").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: function (results) {
+            rawData = results.data;
+            columns = results.meta.fields;
+            
+            // Display column mapping options
+            setupColumnMapping(columns);
+            
+            // Show CSV preview
+            displayCSVPreview(rawData, columns);
+            
+            // Show mapping section and mint button
+            document.getElementById("columnMapping").style.display = "block";
+            document.getElementById("mintCreditsBtn").style.display = "block";
+          }
+        });
+      }
+    });
+
+    function setupColumnMapping(columns) {
+      const nameSelect = document.getElementById("nameColumn");
+      const walletSelect = document.getElementById("walletColumn");
+      const creditsSelect = document.getElementById("creditsColumn");
+      
+      // Clear existing options
+      nameSelect.innerHTML = "";
+      walletSelect.innerHTML = "";
+      creditsSelect.innerHTML = "";
+      
+      // Add options for each column
+      columns.forEach(column => {
+        const nameOption = document.createElement("option");
+        nameOption.value = column;
+        nameOption.textContent = column;
+        nameSelect.appendChild(nameOption.cloneNode(true));
+        
+        const walletOption = document.createElement("option");
+        walletOption.value = column;
+        walletOption.textContent = column;
+        walletSelect.appendChild(walletOption.cloneNode(true));
+        
+        const creditsOption = document.createElement("option");
+        creditsOption.value = column;
+        creditsOption.textContent = column;
+        creditsSelect.appendChild(creditsOption.cloneNode(true));
+      });
+      
+      // Try to auto-select appropriate columns based on common names
+      autoSelectColumns(columns, nameSelect, walletSelect, creditsSelect);
+      
+      // Add event listeners for selection changes
+      nameSelect.addEventListener("change", updateMappedData);
+      walletSelect.addEventListener("change", updateMappedData);
+      creditsSelect.addEventListener("change", updateMappedData);
+      
+      // Initialize with current selections
+      selectedNameColumn = nameSelect.value;
+      selectedWalletColumn = walletSelect.value;
+      selectedCreditsColumn = creditsSelect.value;
+      
+      updateMappedData();
+    }
+    
+    function autoSelectColumns(columns, nameSelect, walletSelect, creditsSelect) {
+      // Common patterns for column names
+      const namePatterns = ["name", "student", "student name", "studentname"];
+      const walletPatterns = ["wallet", "address", "walletaddress", "wallet address", "ethereum", "eth"];
+      const creditsPatterns = ["credit", "credits", "point", "points", "token", "tokens"];
+      
+      // Try to find and select appropriate columns
+      for (const col of columns) {
+        const lowerCol = col.toLowerCase();
+        
+        // Check for name column
+        if (namePatterns.some(pattern => lowerCol.includes(pattern))) {
+          nameSelect.value = col;
+          selectedNameColumn = col;
+        }
+        
+        // Check for wallet column
+        if (walletPatterns.some(pattern => lowerCol.includes(pattern))) {
+          walletSelect.value = col;
+          selectedWalletColumn = col;
+        }
+        
+        // Check for credits column
+        if (creditsPatterns.some(pattern => lowerCol.includes(pattern))) {
+          creditsSelect.value = col;
+          selectedCreditsColumn = col;
+        }
+      }
+    }
+    
+    function updateMappedData() {
+      selectedNameColumn = document.getElementById("nameColumn").value;
+      selectedWalletColumn = document.getElementById("walletColumn").value;
+      selectedCreditsColumn = document.getElementById("creditsColumn").value;
+      
+      mappedData = rawData.map(row => ({
+        name: row[selectedNameColumn],
+        walletAddress: row[selectedWalletColumn],
+        credits: row[selectedCreditsColumn]
+      }));
+      
+      console.log("Mapped data:", mappedData);
+    }
+
+    function displayCSVPreview(data, columns) {
+      const preview = document.getElementById("csvPreview");
+      
+      if (data.length === 0) {
+        preview.innerHTML = "<p>No data found in CSV</p>";
+        return;
+      }
+      
+      let tableHTML = "<table><thead><tr>";
+      
+      // Add headers
+      columns.forEach(column => {
+        tableHTML += `<th>${column}</th>`;
+      });
+      
+      tableHTML += "</tr></thead><tbody>";
+      
+      // Add first 5 rows of data (or fewer if less data available)
+      const rowsToShow = Math.min(5, data.length);
+      
+      for (let i = 0; i < rowsToShow; i++) {
+        tableHTML += "<tr>";
+        columns.forEach(column => {
+          tableHTML += `<td>${data[i][column] || ""}</td>`;
+        });
+        tableHTML += "</tr>";
+      }
+      
+      tableHTML += "</tbody></table>";
+      
+      if (data.length > 5) {
+        tableHTML += `<p>Showing 5 of ${data.length} rows</p>`;
+      }
+      
+      preview.innerHTML = tableHTML;
+    }
+
+    // Updated to process all students with mapped columns
+    async function mintCreditsForAll() {
+      if (!contract) {
+        alert("Please connect your wallet first!");
+        return;
+      }
+
+      if (mappedData.length === 0) {
+        alert("Please upload a CSV file and map columns first!");
+        return;
+      }
+      
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const student of mappedData) {
+        const result = await mintCreditsSingle(
+          student.name, 
+          student.walletAddress, 
+          student.credits
+        );
+        
+        if (result) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      alert(`Minting process completed!\nSuccessful: ${successCount}\nFailed: ${failCount}`);
+    }
+
+    async function mintCreditsSingle(studentName, walletAddress, credits) {
+      // Validate inputs
+      if (!ethers.utils.isAddress(walletAddress)) {
+        console.error(`❌ Invalid wallet address: ${walletAddress}`);
+        return false;
+      }
+
+      if (!studentName || typeof studentName !== "string" || studentName.trim() === "") {
+        console.error(`❌ Invalid name for wallet ${walletAddress}`);
+        return false;
+      }
+
+      const parsedCredits = parseInt(credits);
+      if (isNaN(parsedCredits) || parsedCredits <= 0) {
+        console.error(`❌ Invalid credit value for wallet ${walletAddress}: ${credits}`);
+        return false;
+      }
+
+      try {
+        console.log("Calling mintCredits with:", walletAddress, studentName, parsedCredits);
+        const tx = await contract.mintCredits(walletAddress, studentName, parsedCredits);
+        await tx.wait();
+        console.log(`✅ Minted ${parsedCredits} credits for ${studentName}`);
+        return true;
+      } catch (err) {
+        console.error(`❌ Error minting for ${studentName}:`, err);
+        return false;
+      }
+    }
+
+    // Add event listener for the mint button
+    document.getElementById("mintCreditsBtn").addEventListener("click", mintCreditsForAll);
+  </script>
+</body>
+</html>
