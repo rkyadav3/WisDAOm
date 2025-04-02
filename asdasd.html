@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate NFT Admin Panel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.4/web3.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #34495e;
+            --light: #ecf0f1;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--dark);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-dot.connected {
+            background-color: var(--success);
+        }
+        
+        .status-dot.disconnected {
+            background-color: var(--danger);
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .card h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-pending {
+            background-color: #ffeaa7;
+            color: #d35400;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: var(--dark);
+        }
+        
+        .modal-body {
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #f87171;
+        }
+        
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .preview-modal-content {
+            text-align: center;
+        }
+        
+        .preview-modal-image {
+            max-width: 100%;
+            max-height: 70vh;
+            margin-bottom: 20px;
+        }
+        
+        .certificate-details {
+            text-align: left;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .certificate-details p {
+            margin-bottom: 8px;
+        }
+        
+        .address {
+            font-family: monospace;
+            background-color: #eee;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .uri-text {
+            word-break: break-all;
+            font-family: monospace;
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .no-certificates {
+            text-align: center;
+            padding: 40px 0;
+            color: #888;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Certificate NFT Admin Panel</h1>
+            </div>
+            <div class="connection-status">
+                <div class="status-dot disconnected" id="status-dot"></div>
+                <span id="connection-text">Disconnected</span>
+                <button class="btn" id="connect-btn" style="margin-left: 15px;">Connect Wallet</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="error-container" class="alert alert-danger hidden"></div>
+        <div id="success-container" class="alert alert-success hidden"></div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Total Pending Certificates</h3>
+                <div class="number" id="pending-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Users</h3>
+                <div class="number" id="pending-users-count">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Network</h3>
+                <div class="number" id="network-name">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Pending Certificates</h2>
+            <div id="loading-container" class="loading-container">
+                <div class="spinner"></div>
+            </div>
+            <div id="certificates-container" class="hidden">
+                <table id="certificates-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>User Address</th>
+                            <th>URI</th>
+                            <th>Preview</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="certificates-list">
+                        <!-- Certificate entries will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="no-certificates" class="no-certificates hidden">
+                    <p>No pending certificates found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disapprove Modal -->
+    <div id="disapprove-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-disapprove">&times;</span>
+            <h2>Disapprove Certificate</h2>
+            <div class="modal-body">
+                <p>You are about to disapprove the certificate from: <br>
+                <span id="disapprove-address" class="address"></span></p>
+                <div class="form-group">
+                    <label for="rejection-reason">Rejection Reason:</label>
+                    <textarea id="rejection-reason" class="form-control" rows="4" placeholder="Enter reason for rejection"></textarea>
+                </div>
+            </div>
+            <div class="text-center">
+                <button class="btn btn-danger" id="confirm-disapprove">Confirm Disapproval</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-preview">&times;</span>
+            <h2>Certificate Preview</h2>
+            <div class="modal-body preview-modal-content">
+                <div class="certificate-details">
+                    <p><strong>User Address:</strong> <span id="preview-address" class="address"></span></p>
+                    <p><strong>Certificate URI:</strong></p>
+                    <div id="preview-uri" class="uri-text"></div>
+                </div>
+                
+                <div id="preview-image-container">
+                    <img id="preview-image" class="preview-modal-image" src="" alt="Certificate Preview">
+                </div>
+                
+                <div id="preview-json-container" class="hidden">
+                    <h3>Metadata</h3>
+                    <pre id="preview-json" style="text-align: left; background: #f5f5f5; padding: 15px; border-radius: 4px; overflow: auto;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>CertificateNFT Admin Panel &copy; 2025</p>
+    </footer>
+
+   <script>
+// Contract address - Replace with your deployed contract address
+const contractAddress = "0xABc40Abf80a17c80df4265845925bBaC7961F62f";
+const contractABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			}
+		],
+		"name": "approveCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_reason",
+				"type": "string"
+			}
+		],
+		"name": "disapproveCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "ERC721IncorrectOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ERC721InsufficientApproval",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "approver",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidApprover",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidOperator",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidReceiver",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidSender",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ERC721NonexistentToken",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "OwnableInvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "OwnableUnauthorizedAccount",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "approved",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "approved",
+				"type": "bool"
+			}
+		],
+		"name": "ApprovalForAll",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_fromTokenId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_toTokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "BatchMetadataUpdate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "CertificateApproved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "CertificateDisapproved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "uri",
+				"type": "string"
+			}
+		],
+		"name": "CertificateSubmitted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "CertificateWithdrawn",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "MetadataUpdate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "data",
+				"type": "bytes"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "approved",
+				"type": "bool"
+			}
+		],
+		"name": "setApprovalForAll",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_uri",
+				"type": "string"
+			}
+		],
+		"name": "submitCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			}
+		],
+		"name": "withdrawCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "getApproved",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPendingCertificates",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPendingUsers",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "getUserCertificates",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
+					},
+					{
+						"internalType": "enum CertificateNFT.CertificateStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "string",
+						"name": "rejectionReason",
+						"type": "string"
+					}
+				],
+				"internalType": "struct CertificateNFT.Certificate[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			}
+		],
+		"name": "isApprovedForAll",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ownerOf",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenURI",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "userCertificates",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "uri",
+				"type": "string"
+			},
+			{
+				"internalType": "enum CertificateNFT.CertificateStatus",
+				"name": "status",
+				"type": "uint8"
+			},
+			{
+				"internalType": "string",
+				"name": "rejectionReason",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+// Global variables
+let web3, contract;
+let currentUserAddress = null;
+let isOwner = false;
+let pendingUsers = [];
+let pendingCertificates = {
+    users: [],
+    uris: []
+};
+
+// Current certificate being processed in the modal
+let currentCertificate = {
+    user: null,
+    index: null,
+    uri: null
+};
+
+// Initialize the application
+async function init() {
+    // Check if MetaMask is installed
+    if (typeof window.ethereum !== 'undefined') {
+        try {
+            // Initialize Web3
+            web3 = new Web3(window.ethereum);
+            
+            // Listen for account changes
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            
+            // Listen for chain changes
+            window.ethereum.on('chainChanged', () => {
+                window.location.reload();
+            });
+            
+            // Try to auto connect
+            try {
+                const accounts = await web3.eth.getAccounts();
+                if (accounts.length > 0) {
+                    await connectWallet();
+                }
+            } catch (error) {
+                console.error("Auto-connect failed:", error);
+                showError("Auto-connect failed: " + error.message);
+            }
+        } catch (error) {
+            console.error("Provider initialization error:", error);
+            showError("Failed to initialize provider: " + error.message);
+        }
+    } else {
+        showError("MetaMask is not installed. Please install MetaMask to use this application.");
+        if (connectBtn) {
+            connectBtn.disabled = true;
+        }
+    }
+}
+
+// Connect to wallet
+async function connectWallet() {
+    try {
+        console.log("Connecting to wallet...");
+        
+        // Request account access
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        
+        if (!accounts || accounts.length === 0) {
+            throw new Error("No accounts returned from MetaMask");
+        }
+        
+        console.log("Accounts received:", accounts);
+        
+        // Initialize web3
+        web3 = new Web3(window.ethereum);
+        currentUserAddress = accounts[0];
+        
+        console.log("Connected address:", currentUserAddress);
+        
+        // Initialize contract
+        contract = new web3.eth.Contract(contractABI, contractAddress);
+        
+        // Check if user is contract owner
+        const contractOwner = await contract.methods.owner().call();
+        isOwner = currentUserAddress.toLowerCase() === contractOwner.toLowerCase();
+        
+        console.log("Contract owner:", contractOwner);
+        console.log("Is owner:", isOwner);
+        
+        if (!isOwner) {
+            showError("You are not the contract owner. You need to connect with the owner account to access the admin panel.");
+            updateConnectionStatus(false);
+            return;
+        }
+        
+        // Update UI
+        updateConnectionStatus(true);
+        if (connectBtn) {
+            connectBtn.textContent = "Connected";
+        }
+        
+        // Get network info
+        const networkId = await web3.eth.net.getId();
+        if (networkNameEl) {
+            networkNameEl.textContent = getNetworkName(networkId);
+        }
+        
+        // Load data
+        loadPendingCertificates();
+        
+    } catch (error) {
+        console.error("Connection error:", error);
+        showError("Failed to connect to wallet: " + error.message);
+        updateConnectionStatus(false);
+    }
+}
+
+// Handle account changes
+function handleAccountsChanged(accounts) {
+    if (accounts.length === 0) {
+        // User disconnected
+        currentUserAddress = null;
+        isOwner = false;
+        updateConnectionStatus(false);
+        resetData();
+        if (connectBtn) {
+            connectBtn.textContent = "Connect Wallet";
+        }
+        showError("Wallet disconnected");
+    } else if (currentUserAddress !== accounts[0]) {
+        // User switched accounts
+        location.reload();
+    }
+}
+
+// Update connection status UI
+function updateConnectionStatus(isConnected) {
+    const statusDot = document.getElementById('status-dot');
+    const connectionText = document.getElementById('connection-text');
+    
+    if (!statusDot || !connectionText) {
+        console.error("Status elements not found in the DOM");
+        return;
+    }
+    
+    if (isConnected) {
+        statusDot.classList.remove('disconnected');
+        statusDot.classList.add('connected');
+        connectionText.textContent = `Connected: ${shortenAddress(currentUserAddress)}`;
+    } else {
+        statusDot.classList.remove('connected');
+        statusDot.classList.add('disconnected');
+        connectionText.textContent = "Disconnected";
+    }
+}
+
+// Reset data when disconnected
+function resetData() {
+    const pendingCountEl = document.getElementById('pending-count');
+    const pendingUsersCountEl = document.getElementById('pending-users-count');
+    const networkNameEl = document.getElementById('network-name');
+    const certificatesList = document.getElementById('certificates-list');
+    const loadingContainer = document.getElementById('loading-container');
+    const certificatesContainer = document.getElementById('certificates-container');
+    
+    if (pendingCountEl) pendingCountEl.textContent = "-";
+    if (pendingUsersCountEl) pendingUsersCountEl.textContent = "-";
+    if (networkNameEl) networkNameEl.textContent = "-";
+    if (certificatesList) certificatesList.innerHTML = "";
+    
+    if (loadingContainer && certificatesContainer) {
+        loadingContainer.classList.remove('hidden');
+        certificatesContainer.classList.add('hidden');
+    }
+}
+
+// Get network name from chain ID
+function getNetworkName(chainId) {
+    const networks = {
+        1: "Ethereum Mainnet",
+        3: "Ropsten Testnet",
+        4: "Rinkeby Testnet",
+        5: "Goerli Testnet",
+        42: "Kovan Testnet",
+        56: "Binance Smart Chain",
+        97: "BSC Testnet",
+        137: "Polygon Mainnet",
+        80001: "Mumbai Testnet",
+        42161: "Arbitrum One",
+        421613: "Arbitrum Goerli",
+        10: "Optimism",
+        420: "Optimism Goerli",
+        1337: "Local Network",
+        31337: "Hardhat Network"
+    };
+    
+    return networks[chainId] || `Chain ID ${chainId}`;
+}
+
+// Load pending certificates
+async function loadPendingCertificates() {
+    if (!contract || !isOwner) {
+        console.error("Contract not initialized or user is not owner");
+        return;
+    }
+    
+    const loadingContainer = document.getElementById('loading-container');
+    const certificatesContainer = document.getElementById('certificates-container');
+    
+    if (!loadingContainer || !certificatesContainer) {
+        console.error("Container elements not found in the DOM");
+        return;
+    }
+    
+    loadingContainer.classList.remove('hidden');
+    certificatesContainer.classList.add('hidden');
+    
+    try {
+        // Get pending users
+        pendingUsers = await contract.methods.getPendingUsers().call();
+        const pendingUsersCountEl = document.getElementById('pending-users-count');
+        if (pendingUsersCountEl) {
+            pendingUsersCountEl.textContent = pendingUsers.length;
+        }
+        
+        // Get pending certificates
+        const result = await contract.methods.getPendingCertificates().call();
+        pendingCertificates.users = result[0];
+        pendingCertificates.uris = result[1];
+        
+        const pendingCountEl = document.getElementById('pending-count');
+        if (pendingCountEl) {
+            pendingCountEl.textContent = pendingCertificates.users.length;
+        }
+        
+        // Display certificates
+        displayCertificates();
+        
+    } catch (error) {
+        console.error("Error fetching pending certificates:", error);
+        showError("Error fetching pending certificates: " + error.message);
+        if (loadingContainer) {
+            loadingContainer.classList.add('hidden');
+        }
+    }
+}
+
+// Display certificates in the table
+function displayCertificates() {
+    const certificatesList = document.getElementById('certificates-list');
+    const noCertificates = document.getElementById('no-certificates');
+    const loadingContainer = document.getElementById('loading-container');
+    const certificatesContainer = document.getElementById('certificates-container');
+    
+    if (!certificatesList) {
+        console.error("Certificate list element not found in the DOM");
+        return;
+    }
+    
+    certificatesList.innerHTML = "";
+    
+    if (pendingCertificates.users.length === 0) {
+        if (noCertificates) noCertificates.classList.remove('hidden');
+    } else {
+        if (noCertificates) noCertificates.classList.add('hidden');
+        
+        // Group certificates by user and determine indices
+        const userCertificateIndices = {};
+        
+        // Create a map to track the indices for each user
+        for (let i = 0; i < pendingCertificates.users.length; i++) {
+            const user = pendingCertificates.users[i];
+            if (!userCertificateIndices[user]) {
+                userCertificateIndices[user] = [];
+            }
+            userCertificateIndices[user].push(i);
+        }
+        
+        // Process each certificate
+        for (let i = 0; i < pendingCertificates.users.length; i++) {
+            const user = pendingCertificates.users[i];
+            const uri = pendingCertificates.uris[i];
+            
+            // Find the index of this certificate for this specific user
+            const userIndex = userCertificateIndices[user].indexOf(i);
+            
+            // Create table row
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td><span class="address">${shortenAddress(user)}</span></td>
+                <td><span title="${uri}">${shortenUri(uri)}</span></td>
+                <td><img src="/api/placeholder/80/80" class="preview-image" data-uri="${uri}" data-user="${user}"></td>
+                <td class="actions">
+                    <button class="btn btn-success btn-approve" data-user="${user}" data-index="${userIndex}">Approve</button>
+                    <button class="btn btn-danger btn-disapprove" data-user="${user}" data-index="${userIndex}">Disapprove</button>
+                </td>
+            `;
+            
+            certificatesList.appendChild(row);
+            
+            // Try to load the actual image/metadata if URI is a URL
+            const previewImg = row.querySelector('.preview-image');
+            loadPreviewImage(previewImg, uri);
+        }
+        
+        // Add event listeners for buttons
+        addButtonEventListeners();
+    }
+    
+    if (loadingContainer && certificatesContainer) {
+        loadingContainer.classList.add('hidden');
+        certificatesContainer.classList.remove('hidden');
+    }
+}
+
+// Try to load the certificate preview image
+function loadPreviewImage(imgElement, uri) {
+    // Check if it's a valid URL
+    if (uri.startsWith('http')) {
+        // If it's JSON metadata, try to get the image URL
+        if (uri.endsWith('.json')) {
+            fetch(uri)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image) {
+                        imgElement.src = data.image;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading JSON metadata:", error);
+                });
+        } else if (
+            uri.endsWith('.jpg') || 
+            uri.endsWith('.jpeg') || 
+            uri.endsWith('.png') || 
+            uri.endsWith('.gif') || 
+            uri.endsWith('.svg')
+        ) {
+            imgElement.src = uri;
+        }
+    } else if (uri.startsWith('ipfs://')) {
+        // Handle IPFS URLs by converting to a gateway URL
+        const ipfsHash = uri.replace('ipfs://', '');
+        imgElement.src = `https://ipfs.io/ipfs/${ipfsHash}`;
+    }
+    
+    // Add error handler to revert to placeholder if loading fails
+    imgElement.onerror = function() {
+        imgElement.src = "/api/placeholder/80/80";
+    };
+}
+
+// Add event listeners to buttons
+function addButtonEventListeners() {
+    // Approve buttons
+    const approveButtons = document.querySelectorAll('.btn-approve');
+    approveButtons.forEach(button => {
+        button.addEventListener('click', handleApprove);
+    });
+    
+    // Disapprove buttons
+    const disapproveButtons = document.querySelectorAll('.btn-disapprove');
+    disapproveButtons.forEach(button => {
+        button.addEventListener('click', handleDisapprove);
+    });
+    
+    // Preview images
+    const previewImages = document.querySelectorAll('.preview-image');
+    previewImages.forEach(img => {
+        img.addEventListener('click', handlePreview);
+    });
+}
+
+// Handle approve button click
+async function handleApprove(event) {
+    const user = event.target.getAttribute('data-user');
+    const index = parseInt(event.target.getAttribute('data-index'));
+    
+    if (!contract || !user || isNaN(index)) {
+        console.error("Invalid approve parameters or contract not initialized");
+        return;
+    }
+    
+    try {
+        showMessage("Approving certificate...");
+        const tx = await contract.methods.approveCertificate(user, index).send({ from: currentUserAddress });
+        showMessage("Transaction submitted. Waiting for confirmation...");
+        
+        showSuccess(`Certificate approved successfully! Transaction hash: ${tx.transactionHash}`);
+        // Reload data
+        loadPendingCertificates();
+        
+    } catch (error) {
+        console.error("Error approving certificate:", error);
+        showError("Error approving certificate: " + error.message);
+    }
+}
+
+// Handle disapprove button click
+function handleDisapprove(event) {
+    const user = event.target.getAttribute('data-user');
+    const index = parseInt(event.target.getAttribute('data-index'));
+    
+    if (!user || isNaN(index)) {
+        console.error("Invalid disapprove parameters");
+        return;
+    }
+    
+    // Set current certificate data
+    currentCertificate.user = user;
+    currentCertificate.index = index;
+    
+    // Update modal
+    const disapproveModal = document.getElementById('disapprove-modal');
+    const disapproveAddress = document.getElementById('disapprove-address');
+    const rejectionReason = document.getElementById('rejection-reason');
+    
+    if (disapproveAddress && rejectionReason && disapproveModal) {
+        disapproveAddress.textContent = user;
+        rejectionReason.value = "";
+        disapproveModal.style.display = "block";
+    } else {
+        console.error("Disapprove modal elements not found in the DOM");
+    }
+}
+
+// Handle preview image click
+async function handlePreview(event) {
+    const uri = event.target.getAttribute('data-uri');
+    const user = event.target.getAttribute('data-user');
+    
+    if (!uri) return;
+    
+    const previewModal = document.getElementById('preview-modal');
+    const previewAddress = document.getElementById('preview-address');
+    const previewUri = document.getElementById('preview-uri');
+    const previewImage = document.getElementById('preview-image');
+    const previewJsonContainer = document.getElementById('preview-json-container');
+    const previewJson = document.getElementById('preview-json');
+    
+    if (!previewModal || !previewAddress || !previewUri || !previewImage || !previewJsonContainer || !previewJson) {
+        console.error("Preview modal elements not found in the DOM");
+        return;
+    }
+    
+    // Update modal content
+    previewAddress.textContent = user;
+    previewUri.textContent = uri;
+    previewImage.src = "/api/placeholder/400/300";
+    previewJsonContainer.classList.add('hidden');
+    
+    // Try to load the actual image/metadata
+    if (uri.startsWith('http')) {
+        if (uri.endsWith('.json')) {
+            try {
+                const response = await fetch(uri);
+                const data = await response.json();
+                
+                // Show JSON data
+                previewJson.textContent = JSON.stringify(data, null, 2);
+                previewJsonContainer.classList.remove('hidden');
+                
+                // Try to get image from metadata
+                if (data.image) {
+                    previewImage.src = data.image;
+                }
+            } catch (error) {
+                console.error("Error loading JSON metadata:", error);
+            }
+        } else if (
+            uri.endsWith('.jpg') || 
+            uri.endsWith('.jpeg') || 
+            uri.endsWith('.png') || 
+            uri.endsWith('.gif') || 
+            uri.endsWith('.svg')
+        ) {
+            previewImage.src = uri;
+        }
+    } else if (uri.startsWith('ipfs://')) {
+        // Handle IPFS URLs
+        const ipfsHash = uri.replace('ipfs://', '');
+        previewImage.src = `https://ipfs.io/ipfs/${ipfsHash}`;
+    }
+    
+    // Add error handler for image
+    previewImage.onerror = function() {
+        previewImage.src = "/api/placeholder/400/300";
+    };
+    
+    // Show modal
+    previewModal.style.display = "block";
+}
+
+// Confirm disapproval
+async function confirmDisapproval() {
+    const rejectionReason = document.getElementById('rejection-reason');
+    const disapproveModal = document.getElementById('disapprove-modal');
+    
+    if (!rejectionReason || !disapproveModal) {
+        console.error("Rejection reason or modal elements not found in the DOM");
+        return;
+    }
+    
+    const reason = rejectionReason.value.trim();
+    
+    if (!reason) {
+        alert("Please provide a rejection reason");
+        return;
+    }
+    
+    try {
+        disapproveModal.style.display = "none";
+        showMessage("Disapproving certificate...");
+        
+        const tx = await contract.methods.disapproveCertificate(
+            currentCertificate.user,
+            currentCertificate.index,
+            reason
+        ).send({ from: currentUserAddress });
+        
+        showMessage("Transaction submitted. Waiting for confirmation...");
+        
+        showSuccess(`Certificate disapproved successfully! Transaction hash: ${tx.transactionHash}`);
+        // Reload data
+        loadPendingCertificates();
+        
+    } catch (error) {
+        console.error("Error disapproving certificate:", error);
+        showError("Error disapproving certificate: " + error.message);
+    }
+}
+
+// Helper function to shorten addresses
+function shortenAddress(address) {
+    return address.substring(0, 6) + '...' + address.substring(address.length - 4);
+}
+
+// Helper function to shorten URIs
+function shortenUri(uri) {
+    if (uri.length <= 30) return uri;
+    return uri.substring(0, 15) + '...' + uri.substring(uri.length - 15);
+}
+
+// Show error message
+function showError(message) {
+    const errorContainer = document.getElementById('error-container');
+    if (!errorContainer) {
+        console.error("Error container not found in the DOM");
+        console.error(message);
+        return;
+    }
+    
+    errorContainer.textContent = message;
+    errorContainer.classList.remove('hidden');
+    
+    // Hide after 5 seconds
+    setTimeout(() => {
+        errorContainer.classList.add('hidden');
+    }, 5000);
+}
+
+// Show success message
+function showSuccess(message) {
+    const successContainer = document.getElementById('success-container');
+    if (!successContainer) {
+        console.error("Success container not found in the DOM");
+        console.log(message);
+        return;
+    }
+    
+    successContainer.textContent = message;
+    successContainer.classList.remove('hidden');
+    
+    // Hide after 5 seconds
+    setTimeout(() => {
+        successContainer.classList.add('hidden');
+    }, 5000);
+}
+
+// Show message in success container without auto-hide
+function showMessage(message) {
+    const successContainer = document.getElementById('success-container');
+    if (!successContainer) {
+        console.error("Success container not found in the DOM");
+        console.log(message);
+        return;
+    }
+    
+    successContainer.textContent = message;
+    successContainer.classList.remove('hidden');
+}
+
+// Initialize the application when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded");
+    
+    // Add event listeners
+    const connectBtn = document.getElementById('connect-btn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', connectWallet);
+    }
+    
+    // Modal close buttons
+    const closeDisapprove = document.getElementById('close-disapprove');
+    if (closeDisapprove) {
+        closeDisapprove.addEventListener('click', () => {
+            const disapproveModal = document.getElementById('disapprove-modal');
+            if (disapproveModal) disapproveModal.style.display = "none";
+        });
+    }
+    
+    const closePreview = document.getElementById('close-preview');
+    if (closePreview) {
+        closePreview.addEventListener('click', () => {
+            const previewModal = document.getElementById('preview-modal');
+            if (previewModal) previewModal.style.display = "none";
+        });
+    }
+    
+    const confirmDisapprove = document.getElementById('confirm-disapprove');
+    if (confirmDisapprove) {
+        confirmDisapprove.addEventListener('click', confirmDisapproval);
+    }
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', (event) => {
+        const disapproveModal = document.getElementById('disapprove-modal');
+        const previewModal = document.getElementById('preview-modal');
+        
+        if (disapproveModal && event.target === disapproveModal) {
+            disapproveModal.style.display = "none";
+        } else if (previewModal && event.target === previewModal) {
+            previewModal.style.display = "none";
+        }
+    });
+    
+    // Initialize the application
+    init();
+});
+
+// Check if contractAddress and contractABI are defined
+if (typeof contractAddress === 'undefined' || typeof contractABI === 'undefined') {
+    console.error("Contract address or ABI is not defined. Make sure they are defined before this script runs.");
+}
+
+</script>
+</body>
+</html>
