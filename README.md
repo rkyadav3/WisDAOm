@@ -1,4 +1,4 @@
-# AceHack-4.0
+# WisDAOm 
 
 DAO-based blockchain platform for students is a revolutionary decentralized system that enhances academic credibility, promotes fair governance, and incentivizes student achievements. Below is a detailed explanation of its core components and functionalities.
 
