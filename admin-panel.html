@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Student Achievement System</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Admin Panel</div>
+        <div class="nav-links">
+            <a href="welcome.html" class="back-btn">← Back to Home</a>
+            <button id="connectWallet" class="connect-btn">Connect Wallet</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="admin-container">
+            <h1>Achievement Management</h1>
+            
+            <div class="admin-sections">
+                <!-- Create Achievement Section -->
+                <section class="admin-section">
+                    <h2>Create New Achievement</h2>
+                    <form id="createAchievementForm">
+                        <div class="form-group">
+                            <label for="achievementName">Achievement Name</label>
+                            <input type="text" id="achievementName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="achievementDesc">Description</label>
+                            <textarea id="achievementDesc" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="creditThreshold">Credit Threshold</label>
+                            <input type="number" id="creditThreshold" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="metadataURI">Metadata URI</label>
+                            <input type="text" id="metadataURI" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Create Achievement</button>
+                    </form>
+                </section>
+
+                <!-- Award Achievement Section -->
+                <section class="admin-section">
+                    <h2>Award Achievement</h2>
+                    <form id="awardAchievementForm">
+                        <div class="form-group">
+                            <label for="studentAddress">Student Address</label>
+                            <input type="text" id="studentAddress" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="achievementSelect">Select Achievement</label>
+                            <select id="achievementSelect" required>
+                                <option value="">Choose an achievement</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="submit-btn">Award Achievement</button>
+                    </form>
+                </section>
+
+                <!-- Manage Managers Section -->
+                <section class="admin-section">
+                    <h2>Manage Achievement Managers</h2>
+                    <form id="manageManagerForm">
+                        <div class="form-group">
+                            <label for="managerAddress">Manager Address</label>
+                            <input type="text" id="managerAddress" required>
+                        </div>
+                        <div class="button-group">
+                            <button type="button" id="addManager" class="action-btn">Add Manager</button>
+                            <button type="button" id="removeManager" class="action-btn">Remove Manager</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html> 

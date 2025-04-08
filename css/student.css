@@ -1,0 +1,111 @@
+@import url('common.css');
+
+.dashboard-container {
+    padding: 2rem;
+}
+
+.student-info {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.student-info h1 {
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.stat-card {
+    background-color: var(--card-background);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+
+.stat-card h3 {
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.stat-card p {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.achievements-section,
+.available-achievements {
+    margin-bottom: 3rem;
+}
+
+.achievements-section h2,
+.available-achievements h2 {
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.achievement-card {
+    background-color: var(--card-background);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease;
+}
+
+.achievement-card:hover {
+    transform: translateY(-5px);
+}
+
+.achievement-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.achievement-card p {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.achievement-card .progress {
+    height: 8px;
+    background-color: #eee;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.achievement-card .progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.achievement-card .status {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    text-align: right;
+}
+
+.achievement-card.earned {
+    border-left: 4px solid #4CAF50;
+}
+
+.achievement-card.pending {
+    border-left: 4px solid #FFC107;
+} 

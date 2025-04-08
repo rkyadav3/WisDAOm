@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Student Achievement System</title>
+    <link rel="stylesheet" href="css/student.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Student Dashboard</div>
+        <div class="nav-links">
+            <a href="welcome.html" class="back-btn">← Back to Home</a>
+            <button id="connectWallet" class="connect-btn">Connect Wallet</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="dashboard-container">
+            <div class="student-info">
+                <h1>Welcome, <span id="studentName">Student</span></h1>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Total Credits</h3>
+                        <p id="totalCredits">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Achievements Earned</h3>
+                        <p id="achievementsCount">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievements-section">
+                <h2>Your Achievements</h2>
+                <div class="achievements-grid" id="achievementsList">
+                    <!-- Achievements will be loaded here -->
+                </div>
+            </div>
+
+            <div class="available-achievements">
+                <h2>Available Achievements</h2>
+                <div class="achievements-grid" id="availableAchievements">
+                    <!-- Available achievements will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="js/student.js"></script>
+</body>
+</html> 
