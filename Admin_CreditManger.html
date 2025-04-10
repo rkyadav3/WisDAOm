@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Credit Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .section h2 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .active {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+
+        .inactive {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+
+        .wallet-info {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .wallet-info h2 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .wallet-address {
+            margin-bottom: 10px;
+        }
+
+        .connection-status {
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        .proposal-card {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .proposal-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .proposal-description {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .proposal-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .voting {
+            background-color: #d9edf7;
+            color: #31708f;
+        }
+
+        .passed {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+
+        .rejected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Credit Manager Dashboard</h1>
+
+        <div class="wallet-info">
+            <h2>Wallet Connection</h2>
+            <p class="wallet-address" id="walletAddress">Not connected</p>
+            <button id="connectWallet" onclick="connectWallet()">Connect Wallet</button>
+            <p id="connectionStatus" class="status inactive">Disconnected</p>
+        </div>
+
+        <div class="section">
+            <h2>Course Management</h2>
+            <div class="form-group">
+                <label>Course ID:</label>
+                <input type="text" id="courseId" placeholder="Enter course ID">
+            </div>
+            <div class="form-group">
+                <label>Course Name:</label>
+                <input type="text" id="courseName" placeholder="Enter course name">
+            </div>
+            <div class="form-group">
+                <label>Credit Value:</label>
+                <input type="number" id="creditValue" placeholder="Enter credit value">
+            </div>
+            <button onclick="addCourse()">Add Course</button>
+            <button onclick="updateCourse()">Update Course</button>
+        </div>
+
+        <div class="section">
+            <h2>Assignment Management</h2>
+            <div class="form-group">
+                <label>Assignment ID:</label>
+                <input type="text" id="assignmentId" placeholder="Enter assignment ID">
+            </div>
+            <div class="form-group">
+                <label>Course ID:</label>
+                <input type="text" id="assignmentCourseId" placeholder="Enter course ID">
+            </div>
+            <div class="form-group">
+                <label>Max Credits:</label>
+                <input type="number" id="maxCredits" placeholder="Enter max credits">
+            </div>
+            <button onclick="addAssignment()">Add Assignment</button>
+            <button onclick="updateAssignment()">Update Assignment</button>
+        </div>
+
+        <div class="section">
+            <h2>Evaluator Management</h2>
+            <div class="form-group">
+                <label>Evaluator Address:</label>
+                <input type="text" id="evaluatorAddress" placeholder="Enter evaluator address">
+            </div>
+            <button onclick="addEvaluator()">Add Evaluator</button>
+            <button onclick="removeEvaluator()">Remove Evaluator</button>
+        </div>
+
+        <div class="section">
+            <h2>Contract Status</h2>
+            <button onclick="pauseContract()">Pause Contract</button>
+            <button onclick="unpauseContract()">Unpause Contract</button>
+        </div>
+
+        <div class="section">
+            <h2>Proposal Management</h2>
+            <div class="form-group">
+                <label>Proposal Title:</label>
+                <input type="text" id="proposalTitle" placeholder="Enter proposal title">
+            </div>
+            <div class="form-group">
+                <label>Proposal Description:</label>
+                <textarea id="proposalDescription" placeholder="Enter proposal description" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Voting Duration (days):</label>
+                <input type="number" id="votingDuration" placeholder="Enter voting duration in days">
+            </div>
+            <button onclick="createProposal()">Create Proposal</button>
+        </div>
+
+        <div class="section">
+            <h2>Active Proposals</h2>
+            <div class="table-container">
+                <table id="proposalsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Votes For</th>
+                            <th>Votes Against</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proposalsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Course List</h2>
+            <div class="table-container">
+                <table id="courseTable">
+                    <thead>
+                        <tr>
+                            <th>Course ID</th>
+                            <th>Course Name</th>
+                            <th>Credit Value</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Assignment List</h2>
+            <div class="table-container">
+                <table id="assignmentTable">
+                    <thead>
+                        <tr>
+                            <th>Assignment ID</th>
+                            <th>Course ID</th>
+                            <th>Max Credits</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignmentTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web3 and contract initialization
+        let creditManagerContract;
+        let web3;
+        let accounts = [];
+
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access
+                    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    
+                    // Create Web3 instance
+                    web3 = new Web3(window.ethereum);
+                    
+                    // Update UI
+                    document.getElementById('walletAddress').textContent = accounts[0];
+                    document.getElementById('connectionStatus').textContent = 'Connected';
+                    document.getElementById('connectionStatus').className = 'status active';
+                    document.getElementById('connectWallet').style.display = 'none';
+                    
+                    // Initialize contract
+                    await initContract();
+                    
+                    // Load initial data
+                    await loadCourses();
+                    await loadAssignments();
+                    await loadProposals();
+                    
+                    // Listen for account changes
+                    window.ethereum.on('accountsChanged', handleAccountsChanged);
+                    
+                    // Listen for chain changes
+                    window.ethereum.on('chainChanged', handleChainChanged);
+                    
+                } catch (error) {
+                    console.error('Error connecting to MetaMask:', error);
+                    alert('Error connecting to MetaMask. Please make sure MetaMask is installed and unlocked.');
+                }
+            } else {
+                alert('Please install MetaMask to use this application');
+            }
+        }
+
+        function handleAccountsChanged(newAccounts) {
+            accounts = newAccounts;
+            if (accounts.length === 0) {
+                // MetaMask is locked or the user has not connected any accounts
+                document.getElementById('walletAddress').textContent = 'Not connected';
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').className = 'status inactive';
+                document.getElementById('connectWallet').style.display = 'block';
+            } else {
+                document.getElementById('walletAddress').textContent = accounts[0];
+            }
+        }
+
+        function handleChainChanged(chainId) {
+            // Reload the page when the chain changes
+            window.location.reload();
+        }
+
+        async function initContract() {
+            try {
+                // Replace with your contract address
+                const contractAddress = 'YOUR_CONTRACT_ADDRESS';
+                const contractABI = []; // Add your contract ABI here
+                
+                creditManagerContract = new web3.eth.Contract(contractABI, contractAddress);
+                
+                // Check if the connected account is the owner
+                const owner = await creditManagerContract.methods.owner().call();
+                if (owner.toLowerCase() !== accounts[0].toLowerCase()) {
+                    alert('Warning: Connected wallet is not the contract owner. Some functions may not work.');
+                }
+            } catch (error) {
+                console.error('Error initializing contract:', error);
+                alert('Error initializing contract. Please check the contract address and ABI.');
+            }
+        }
+
+        // Course Management Functions
+        async function addCourse() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const courseId = document.getElementById('courseId').value;
+            const courseName = document.getElementById('courseName').value;
+            const creditValue = document.getElementById('creditValue').value;
+
+            try {
+                await creditManagerContract.methods.addCourse(courseId, courseName, creditValue)
+                    .send({ from: accounts[0] });
+                loadCourses();
+            } catch (error) {
+                console.error('Error adding course:', error);
+                alert('Error adding course: ' + error.message);
+            }
+        }
+
+        async function updateCourse() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const courseId = document.getElementById('courseId').value;
+            const courseName = document.getElementById('courseName').value;
+            const creditValue = document.getElementById('creditValue').value;
+            const isActive = true; // You can add a checkbox for this
+
+            try {
+                await creditManagerContract.methods.updateCourse(courseId, courseName, creditValue, isActive)
+                    .send({ from: accounts[0] });
+                loadCourses();
+            } catch (error) {
+                console.error('Error updating course:', error);
+            }
+        }
+
+        // Assignment Management Functions
+        async function addAssignment() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const assignmentId = document.getElementById('assignmentId').value;
+            const courseId = document.getElementById('assignmentCourseId').value;
+            const maxCredits = document.getElementById('maxCredits').value;
+
+            try {
+                await creditManagerContract.methods.addAssignment(assignmentId, courseId, maxCredits)
+                    .send({ from: accounts[0] });
+                loadAssignments();
+            } catch (error) {
+                console.error('Error adding assignment:', error);
+            }
+        }
+
+        async function updateAssignment() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const assignmentId = document.getElementById('assignmentId').value;
+            const courseId = document.getElementById('assignmentCourseId').value;
+            const maxCredits = document.getElementById('maxCredits').value;
+            const isActive = true; // You can add a checkbox for this
+
+            try {
+                await creditManagerContract.methods.updateAssignment(assignmentId, courseId, maxCredits, isActive)
+                    .send({ from: accounts[0] });
+                loadAssignments();
+            } catch (error) {
+                console.error('Error updating assignment:', error);
+            }
+        }
+
+        // Evaluator Management Functions
+        async function addEvaluator() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const evaluatorAddress = document.getElementById('evaluatorAddress').value;
+
+            try {
+                await creditManagerContract.methods.addEvaluator(evaluatorAddress)
+                    .send({ from: accounts[0] });
+            } catch (error) {
+                console.error('Error adding evaluator:', error);
+            }
+        }
+
+        async function removeEvaluator() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const evaluatorAddress = document.getElementById('evaluatorAddress').value;
+
+            try {
+                await creditManagerContract.methods.removeEvaluator(evaluatorAddress)
+                    .send({ from: accounts[0] });
+            } catch (error) {
+                console.error('Error removing evaluator:', error);
+            }
+        }
+
+        // Contract Status Functions
+        async function pauseContract() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            try {
+                await creditManagerContract.methods.pause()
+                    .send({ from: accounts[0] });
+            } catch (error) {
+                console.error('Error pausing contract:', error);
+            }
+        }
+
+        async function unpauseContract() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            try {
+                await creditManagerContract.methods.unpause()
+                    .send({ from: accounts[0] });
+            } catch (error) {
+                console.error('Error unpausing contract:', error);
+            }
+        }
+
+        // Proposal Management Functions
+        async function createProposal() {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const title = document.getElementById('proposalTitle').value;
+            const description = document.getElementById('proposalDescription').value;
+            const duration = document.getElementById('votingDuration').value;
+
+            if (!title || !description || !duration) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                await creditManagerContract.methods.createProposal(title, description, duration)
+                    .send({ from: accounts[0] });
+                
+                // Clear form
+                document.getElementById('proposalTitle').value = '';
+                document.getElementById('proposalDescription').value = '';
+                document.getElementById('votingDuration').value = '';
+                
+                // Reload proposals
+                loadProposals();
+            } catch (error) {
+                console.error('Error creating proposal:', error);
+                alert('Error creating proposal: ' + error.message);
+            }
+        }
+
+        async function loadProposals() {
+            try {
+                const proposals = await creditManagerContract.methods.getAllProposals().call();
+                const tableBody = document.getElementById('proposalsTableBody');
+                tableBody.innerHTML = '';
+
+                for (const proposal of proposals) {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = proposal.id;
+                    row.insertCell(1).textContent = proposal.title;
+                    row.insertCell(2).textContent = proposal.description;
+                    
+                    const statusCell = row.insertCell(3);
+                    const statusSpan = document.createElement('span');
+                    statusSpan.className = `proposal-status ${getProposalStatusClass(proposal.status)}`;
+                    statusSpan.textContent = getProposalStatusText(proposal.status);
+                    statusCell.appendChild(statusSpan);
+
+                    row.insertCell(4).textContent = proposal.votesFor;
+                    row.insertCell(5).textContent = proposal.votesAgainst;
+
+                    const actionsCell = row.insertCell(6);
+                    if (proposal.status === '0') { // Voting
+                        const closeButton = document.createElement('button');
+                        closeButton.textContent = 'Close Voting';
+                        closeButton.onclick = () => closeProposal(proposal.id);
+                        actionsCell.appendChild(closeButton);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading proposals:', error);
+            }
+        }
+
+        async function closeProposal(proposalId) {
+            if (!accounts.length) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            try {
+                await creditManagerContract.methods.closeProposal(proposalId)
+                    .send({ from: accounts[0] });
+                loadProposals();
+            } catch (error) {
+                console.error('Error closing proposal:', error);
+                alert('Error closing proposal: ' + error.message);
+            }
+        }
+
+        function getProposalStatusClass(status) {
+            switch(status) {
+                case '0': return 'voting';
+                case '1': return 'passed';
+                case '2': return 'rejected';
+                default: return '';
+            }
+        }
+
+        function getProposalStatusText(status) {
+            switch(status) {
+                case '0': return 'Voting';
+                case '1': return 'Passed';
+                case '2': return 'Rejected';
+                default: return 'Unknown';
+            }
+        }
+
+        // Data Loading Functions
+        async function loadCourses() {
+            try {
+                const courses = await creditManagerContract.methods.getAllCourses().call();
+                const tableBody = document.getElementById('courseTableBody');
+                tableBody.innerHTML = '';
+
+                courses.forEach(course => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = course.courseId;
+                    row.insertCell(1).textContent = course.courseName;
+                    row.insertCell(2).textContent = course.creditValue;
+                    const statusCell = row.insertCell(3);
+                    const statusSpan = document.createElement('span');
+                    statusSpan.className = `status ${course.isActive ? 'active' : 'inactive'}`;
+                    statusSpan.textContent = course.isActive ? 'Active' : 'Inactive';
+                    statusCell.appendChild(statusSpan);
+                });
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        async function loadAssignments() {
+            try {
+                const assignments = await creditManagerContract.methods.getAllAssignments().call();
+                const tableBody = document.getElementById('assignmentTableBody');
+                tableBody.innerHTML = '';
+
+                assignments.forEach(assignment => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = assignment.assignmentId;
+                    row.insertCell(1).textContent = assignment.courseId;
+                    row.insertCell(2).textContent = assignment.maxCredits;
+                    const statusCell = row.insertCell(3);
+                    const statusSpan = document.createElement('span');
+                    statusSpan.className = `status ${assignment.isActive ? 'active' : 'inactive'}`;
+                    statusSpan.textContent = assignment.isActive ? 'Active' : 'Inactive';
+                    statusCell.appendChild(statusSpan);
+                });
+            } catch (error) {
+                console.error('Error loading assignments:', error);
+            }
+        }
+
+        // Initialize the application
+        window.addEventListener('load', () => {
+            if (typeof window.ethereum !== 'undefined') {
+                // Check if already connected
+                window.ethereum.request({ method: 'eth_accounts' })
+                    .then(handleAccountsChanged)
+                    .catch(console.error);
+            }
+        });
+    </script>
+</body>
+</html> 
+</html> 

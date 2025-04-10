@@ -729,8 +729,8 @@
   <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
   <script>
     // Contract details
-    const CREDITS_CONTRACT_ADDRESS = "0xCed017d972d8a9Ed39BBab28e93460979E72CEff";
-    const GOVERNANCE_CONTRACT_ADDRESS = "0xCed017d972d8a9Ed39BBab28e93460979E72CEff";
+    const CREDITS_CONTRACT_ADDRESS = "0xAf12e5e765672059D73bE6276F216D61043BF74f";
+    const GOVERNANCE_CONTRACT_ADDRESS = "0xD47246C3c40d08f78D8036a6bb874fa9dDD13c92";
     
     const CREDITS_ABI = [
       {
@@ -789,7 +789,933 @@
         "type": "function"
       }
     ];
-
+    const GOVERNANCE_ABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "ERC721IncorrectOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ERC721InsufficientApproval",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "approver",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidApprover",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidOperator",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidReceiver",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "ERC721InvalidSender",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ERC721NonexistentToken",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "OwnableInvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "OwnableUnauthorizedAccount",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "approved",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "approved",
+				"type": "bool"
+			}
+		],
+		"name": "ApprovalForAll",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_fromTokenId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_toTokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "BatchMetadataUpdate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "CertificateApproved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "CertificateDisapproved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "uri",
+				"type": "string"
+			}
+		],
+		"name": "CertificateSubmitted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "CertificateWithdrawn",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "MetadataUpdate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			}
+		],
+		"name": "approveCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "countTotalPendingCertificates",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "_reason",
+				"type": "string"
+			}
+		],
+		"name": "disapproveCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "getApproved",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPendingCertificates",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "users",
+				"type": "address[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "certURIs",
+				"type": "string[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "indexes",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "startIndex",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "batchSize",
+				"type": "uint256"
+			}
+		],
+		"name": "getPendingCertificates",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "startIndex",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "batchSize",
+				"type": "uint256"
+			}
+		],
+		"name": "getPendingCertificatesWithParams",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "users",
+				"type": "address[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "certURIs",
+				"type": "string[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "indexes",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPendingUsers",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPendingUsersCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "getUserCertificates",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
+					},
+					{
+						"internalType": "enum CertificateNFT.CertificateStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "string",
+						"name": "rejectionReason",
+						"type": "string"
+					}
+				],
+				"internalType": "struct CertificateNFT.Certificate[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			}
+		],
+		"name": "isApprovedForAll",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ownerOf",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "pendingCertificateCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "data",
+				"type": "bytes"
+			}
+		],
+		"name": "safeTransferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "approved",
+				"type": "bool"
+			}
+		],
+		"name": "setApprovalForAll",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_uri",
+				"type": "string"
+			}
+		],
+		"name": "submitCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "tokenURI",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "userCertificates",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "uri",
+				"type": "string"
+			},
+			{
+				"internalType": "enum CertificateNFT.CertificateStatus",
+				"name": "status",
+				"type": "uint8"
+			},
+			{
+				"internalType": "string",
+				"name": "rejectionReason",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "usersWithPendingCerts",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_index",
+				"type": "uint256"
+			}
+		],
+		"name": "withdrawCertificate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+];
     // Global variables
     let web3;
     let currentAccount = null;
@@ -923,45 +1849,123 @@
 
     // Load governance data
     async function loadGovernanceData() {
-      // Mock active proposals
-      document.getElementById('activeProposals').innerHTML = `
-        <div class="proposal-card">
-          <div class="proposal-title">Add New Course: Advanced Smart Contracts</div>
-          <div class="proposal-description">Proposal to add a new course on advanced smart contract development</div>
-          <div class="proposal-status">
-            <div>Status: Active (Ends in 2 days)</div>
-            <div class="vote-buttons">
-              <button onclick="voteOnProposal(1, true)">Vote For</button>
-              <button class="vote-against" onclick="voteOnProposal(1, false)">Vote Against</button>
+      try {
+        const proposalCount = await governanceContract.methods.proposalCount().call();
+        const activeProposalsHTML = [];
+        const pastVotesHTML = [];
+        
+        // Get active proposals
+        const activeProposalIds = await governanceContract.methods.getActiveProposals().call();
+        
+        // Load each proposal
+        for (let i = 1; i <= proposalCount; i++) {
+          // Get proposal details using the getProposal function
+          const proposalDetails = await governanceContract.methods.getProposal(i).call();
+          const hasVoted = await governanceContract.methods.hasVoted(currentAccount, i).call();
+          
+          // Destructure the returned values from getProposal
+          const proposal = {
+            title: proposalDetails[0],
+            description: proposalDetails[1],
+            startTime: proposalDetails[2],
+            endTime: proposalDetails[3],
+            yesVotes: proposalDetails[4],
+            noVotes: proposalDetails[5],
+            executed: proposalDetails[6]
+          };
+          
+          // Format timestamps to readable dates
+          const startDate = new Date(proposal.startTime * 1000).toLocaleString();
+          const endDate = new Date(proposal.endTime * 1000).toLocaleString();
+          const isActive = Date.now() < proposal.endTime * 1000 && Date.now() >= proposal.startTime * 1000;
+          
+          // Calculate time remaining for active proposals
+          let timeRemaining = '';
+          if (isActive) {
+            const remainingMs = proposal.endTime * 1000 - Date.now();
+            const remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
+            const remainingHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            timeRemaining = `${remainingDays} days, ${remainingHours} hours`;
+          }
+          
+          const proposalHTML = `
+            <div class="proposal-card">
+              <div class="proposal-title">${proposal.title}</div>
+              <div class="proposal-description">${proposal.description}</div>
+              <div class="proposal-status">
+                ${isActive ? 
+                  `<div>Status: Active (Ends in ${timeRemaining})</div>
+                   ${!hasVoted ? 
+                     `<div class="vote-buttons">
+                        <button onclick="voteOnProposal(${i}, true)">Vote For</button>
+                        <button class="vote-against" onclick="voteOnProposal(${i}, false)">Vote Against</button>
+                      </div>` : 
+                     `<div>You have already voted on this proposal</div>`
+                   }` : 
+                  `<div>Status: Closed (Ended on ${endDate})</div>
+                   <div>Result: ${proposal.yesVotes > proposal.noVotes ? 'Passed' : 'Failed'} 
+                   (${Math.round((parseInt(proposal.yesVotes) * 100) / (parseInt(proposal.yesVotes) + parseInt(proposal.noVotes) || 1))}% in favor)</div>`
+                }
+              </div>
             </div>
+          `;
+          
+          if (isActive) {
+            activeProposalsHTML.push(proposalHTML);
+          } else if (hasVoted) {
+            // For past votes, check if the user voted and show their vote
+            const userVoteHTML = `
+              <div class="proposal-card">
+                <div class="proposal-title">${proposal.title}</div>
+                <div class="proposal-description">You voted: ${hasVoted ? 'For' : 'Against'}</div>
+                <div class="proposal-status">Result: ${proposal.yesVotes > proposal.noVotes ? 'Passed' : 'Failed'} 
+                (${Math.round((parseInt(proposal.yesVotes) * 100) / (parseInt(proposal.yesVotes) + parseInt(proposal.noVotes) || 1))}% in favor)</div>
+              </div>
+            `;
+            pastVotesHTML.push(userVoteHTML);
+          }
+        }
+        
+        // Update the DOM with active proposals
+        document.getElementById('activeProposals').innerHTML = 
+          activeProposalsHTML.length > 0 ? 
+          activeProposalsHTML.join('') : 
+          '<div class="proposal-card">No active proposals at this time.</div>';
+        
+        // Update the DOM with past votes
+        document.getElementById('pastVotes').innerHTML = 
+          pastVotesHTML.length > 0 ? 
+          pastVotesHTML.join('') : 
+          '<div class="proposal-card">You have not voted on any proposals yet.</div>';
+          
+      } catch (error) {
+        console.error("Error loading governance data:", error);
+        document.getElementById('activeProposals').innerHTML = `
+          <div class="proposal-card">
+            <div class="proposal-title">Error loading proposals</div>
+            <div class="proposal-description">${error.message}</div>
           </div>
-        </div>
-        <div class="proposal-card">
-          <div class="proposal-title">Increase Credit Rewards for Project Submissions</div>
-          <div class="proposal-description">Proposal to increase the credit rewards for successful project submissions</div>
-          <div class="proposal-status">
-            <div>Status: Active (Ends in 5 days)</div>
-            <div class="vote-buttons">
-              <button onclick="voteOnProposal(2, true)">Vote For</button>
-              <button class="vote-against" onclick="voteOnProposal(2, false)">Vote Against</button>
-            </div>
+        `;
+        document.getElementById('pastVotes').innerHTML = `
+          <div class="proposal-card">
+            <div class="proposal-title">Error loading past votes</div>
+            <div class="proposal-description">${error.message}</div>
           </div>
-        </div>
-      `;
-      
-      // Mock past votes
-      document.getElementById('pastVotes').innerHTML = `
-        <div class="proposal-card">
-          <div class="proposal-title">Add Weekly Blockchain Workshops</div>
-          <div class="proposal-description">You voted: For</div>
-          <div class="proposal-status">Result: Passed (75% in favor)</div>
-        </div>
-        <div class="proposal-card">
-          <div class="proposal-title">Change Grading System</div>
-          <div class="proposal-description">You voted: Against</div>
-          <div class="proposal-status">Result: Failed (40% in favor)</div>
-        </div>
-      `;
+        `;
+      }
+    }
+    
+    // Function to vote on a proposal
+    async function voteOnProposal(proposalId, support) {
+      try {
+        await governanceContract.methods.vote(proposalId, support).send({ from: currentAccount });
+        alert(`Vote ${support ? 'for' : 'against'} proposal ${proposalId} submitted successfully!`);
+        // Refresh governance data to show updated voting status
+        await loadGovernanceData();
+      } catch (error) {
+        console.error("Error voting on proposal:", error);
+        alert(`Error voting on proposal: ${error.message}`);
+      }
     }
 
     // Load user NFTs and certificates
